@@ -111,91 +111,76 @@ def obter_texto():  # Permite digitar um texto ou selecionar um arquivo .txt
             msg_erro = f'\nNão foi possível abrir o arquivo: {erro}\n'
 
 
-def salvar_resultado(texto, forma):  # Salva o resultado em uma pasta escolhida
 
-    # Define o nome do arquivo de acordo com a operação realizada
+def salvar_resultado(texto, forma):
     if forma == 1:
         nome = 'mensagem_criptografada.txt'
     else:
         nome = 'mensagem_descriptografada.txt'
 
-    try:  # Inicia o tratamento de erros durante o salvamento
+    try:
+        # No Chromebook, o programa roda no ambiente Linux.
+        if platform.system() == "Linux":
+            pasta_destino = Path.home() / "criptografia"
 
-        try:  # Tenta abrir a janela para selecionar a pasta
-            import tkinter as tk  # Importa recursos da interface gráfica
-            from tkinter import filedialog  # Importa a janela de seleção de pastas
+            # Cria a pasta caso ela ainda não exista.
+            pasta_destino.mkdir(parents=True, exist_ok=True)
 
-            janela = tk.Tk()  # Cria a janela principal
-            janela.withdraw()  # Esconde a janela principal
-
+        else:
+            # No Windows, permite escolher a pasta de destino.
             try:
-                # Mantém a janela de seleção à frente das outras
-                janela.attributes('-topmost', True)
+                import tkinter as tk
+                from tkinter import filedialog
 
-                # Abre a janela para o usuário escolher a pasta de destino
-                pasta_escolhida = filedialog.askdirectory(
-                    parent=janela,
-                    title='Escolha onde salvar o resultado'
-                )
+                janela = tk.Tk()
+                janela.withdraw()
 
-            finally:
-                janela.destroy()  # Fecha a janela do Tkinter
+                try:
+                    janela.attributes('-topmost', True)
+                    pasta_escolhida = filedialog.askdirectory(
+                        parent=janela,
+                        title='Escolha onde salvar o resultado'
+                    )
+                finally:
+                    janela.destroy()
 
-        except Exception:
-            # Usa o terminal caso a janela gráfica não funcione
-            pasta_escolhida = ""
+            except Exception:
+                pasta_escolhida = ""
 
-        # Verifica se a janela foi cancelada ou não pôde ser aberta
-        if not pasta_escolhida:
-            print('\nInforme o caminho da pasta onde deseja salvar.')
-            print('Exemplo no Windows: E:\\Mensagens_Criptografadas')
-            print('Pressione Enter para cancelar o salvamento.')
-
-            # Recebe o caminho digitado e remove espaços e aspas externas
-            pasta_escolhida = input('Pasta: ').strip().strip('"')
-
-            # Cancela o salvamento se o usuário não informar um caminho
+            # Se a janela não abrir, permite informar o caminho.
             if not pasta_escolhida:
-                print('\nSalvamento cancelado.')
+                print('\nInforme o caminho da pasta onde deseja salvar.')
+                print('Pressione Enter para cancelar o salvamento.')
+                pasta_escolhida = input('Pasta: ').strip().strip('"')
+
+                if not pasta_escolhida:
+                    print('\nSalvamento cancelado.')
+                    return
+
+            pasta_destino = Path(pasta_escolhida).expanduser()
+
+            if not pasta_destino.is_dir():
+                print('\nA pasta não existe ou não está acessível.')
                 return
 
-        # Converte o caminho escolhido em um objeto Path
-        pasta_destino = Path(pasta_escolhida).expanduser()
-
-        # Verifica se a pasta existe e pode ser acessada
-        if not pasta_destino.is_dir():
-            print('\nA pasta não existe ou não está acessível.')
-            return
-
-        # Combina a pasta escolhida com o nome do arquivo
+        # Evita substituir arquivos que já existem.
         caminho_arquivo = pasta_destino / nome
-
-        # Define o número inicial para criar nomes alternativos
         contador = 2
 
-        # Verifica se já existe um arquivo com esse nome
         while caminho_arquivo.exists():
-
-            # Cria um nome alternativo sem alterar a extensão
             nome_alternativo = (
                 f'{Path(nome).stem}_{contador}{Path(nome).suffix}'
             )
-
-            # Atualiza o caminho para o novo nome
             caminho_arquivo = pasta_destino / nome_alternativo
-
-            # Incrementa o contador para a próxima tentativa
             contador += 1
 
-        # Salva o texto no arquivo utilizando a codificação UTF-8
+        # Salva o resultado em formato de texto.
         caminho_arquivo.write_text(texto, encoding='utf-8')
 
-        # Informa ao usuário onde o arquivo foi salvo
         print(f'\nArquivo salvo em: {caminho_arquivo}')
 
-    except OSError as erro:  # Trata problemas de acesso ou gravação
+    except OSError as erro:
         print(f'\nNão foi possível salvar o arquivo: {erro}')
-
 
 def criptografia():  # Controla a criptografia e a descriptografia
     msg_erro = ""  # Inicializa a mensagem de erro do menu principal
