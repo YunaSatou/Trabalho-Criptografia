@@ -1,102 +1,177 @@
-import os  # Importa o módulo para interagir com o sistema operacional
-import platform  # Importa o módulo para identificar o sistema operacional atual (Windows, Linux ou Mac)
-import subprocess  # Importa o módulo para executar comandos do sistema com segurança
-from main import menu  # Importa a função menu do arquivo main.py para permitir o retorno ao menu principal
+import os  # Permite trabalhar com pastas, caminhos e arquivos
+import platform  # Identifica o sistema operacional utilizado
+import subprocess  # Permite executar comandos do sistema
 
-def limpar_tela():
-    comando = "cls" if platform.system() == "Windows" else "clear"  # Define o comando de limpeza de tela com base no sistema operacional detectado
-    subprocess.run(comando, shell=True)  # Envia o comando diretamente para a execução no terminal do sistema
+def limpar_tela():  # Cria uma função para limpar o terminal
+    comando = "cls" if platform.system() == "Windows" else "clear"  # Escolhe o comando conforme o sistema operacional
+    subprocess.run(comando, shell=True)  # Executa o comando para limpar a tela
 
-base = 'abcdefghijklmnopqrstuvwxyzàáâãéêíóôõúüçABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÉÊÍÓÔÕÚÜÇ.,;:!?(){}""-–—_@#%&*+=/$§1234567890'  # Define a lista de todos os caracteres válidos e possíveis para o processo
-chave = 3  # Define o número de posições que serão puladas ou voltadas na cifra de César
+base = 'abcdefghijklmnopqrstuvwxyzàáâãéêíóôõúüç.,;:!?(){}"-–—_@#%&*+=/$§1234567890'  # Define os caracteres utilizados na cifra, sem duplicar as letras maiúsculas
+chave = 3  # Define o número de posições que cada caractere será deslocado
+pasta_destino = r"E:\Mensagens_Criptografadas"  # Define a pasta em que os arquivos serão salvos no pendrive
 
-def criptografia():
-    msg_erro = ""  # Inicializa uma variável vazia para armazenar as mensagens de erro da escolha inicial
-    
-    while True:  # Cria o loop principal que mantém a tela de criptografia ativa até ser finalizada
-        limpar_tela()  # Limpa o terminal a cada repetição do ciclo principal
-        print('─' * 40)  # Desenha uma linha horizontal divisória com 40 caracteres
-        print('・┆✦ O QUE VOCE DESEJA FAZER? ✦ ┆・'.center(38))  # Alinha o título dentro de uma área predefinida
-        print('─' * 40)  # Desenha a linha horizontal de fechamento do cabeçalho
-        print()  # Cria um espaçamento vertical em branco
-        print('1 - Criptografar'.center(33))  # Exibe centralizada a opção número 1
-        print('2 - Descriptografar'.center(35))  # Exibe centralizada a opção número 2
-        print()  # Cria outro espaçamento vertical em branco
-        print('─' * 40)  # Desenha a linha inferior de fechamento do menu de opções
-        
-        if msg_erro:
-            print(msg_erro)  # Exibe o aviso de erro armazenado caso o usuário tenha digitado algo inválido antes
-            msg_erro = ""  # Reseta o texto do erro para que ele suma na próxima atualização de tela
+def obter_texto():  # Cria uma função para digitar um texto ou abrir um arquivo
+    msg_erro = ""  # Inicializa a mensagem de erro
 
-        try:
-            forma = int(input('Opção: '))  # Lê a entrada do usuário e faz a conversão direta para um número inteiro
-            if forma != 1 and forma != 2:
-                msg_erro = '\nOpção inválida! Escolha apenas 1 ou 2.\n'  # Define a mensagem de erro se o número não for 1 ou 2
-                continue  # Força o loop a recomeçar do topo, exibindo a mensagem de erro que acabou de ser criada
-        except ValueError:
-            msg_erro = '\nEntrada inválida! Digite apenas números.\n'  # Define a mensagem de erro se o usuário digitar letras ou símbolos
-            continue  # Força o loop a recomeçar do topo para limpar a tela e mostrar o erro estruturado
+    while True:  # Mantém o menu funcionando até receber uma entrada válida
+        limpar_tela()  # Limpa o terminal
+        print('─' * 40)  # Exibe a linha superior do menu
+        print('・┆✦ COMO DESEJA INSERIR O TEXTO? ✦ ┆・'.center(40))  # Exibe o título centralizado
+        print('─' * 40)  # Exibe uma linha divisória
+        print()  # Pula uma linha
+        print('1 - Digitar texto'.center(38))  # Exibe a opção para digitar um texto
+        print('2 - Abrir arquivo .txt'.center(38))  # Exibe a opção para abrir um arquivo
+        print()  # Pula uma linha
+        print('─' * 40)  # Exibe a linha inferior do menu
 
-        cripto = ''  # Cria ou limpa a variável que vai acumular a frase final gerada
+        if msg_erro:  # Verifica se existe uma mensagem de erro
+            print(msg_erro)  # Exibe a mensagem de erro
+            msg_erro = ""  # Limpa a mensagem para não repeti-la
 
-        if forma == 1:
-            texto = input('\nDigite o texto que deseja criptografar:\n')  # Solicita a string que passará pela cifra
-            texto = texto.lower()  # Converte toda a entrada recebida para letras minúsculas para padronização
+        try:  # Inicia o tratamento de possíveis entradas inválidas
+            escolha = int(input('Opção: '))  # Recebe a opção digitada pelo usuário
 
-            for palavra in texto: 
-                posicao = base.find(palavra)  # Procura o índice numérico do caractere atual dentro da variável base
+            if escolha == 1:  # Verifica se o usuário escolheu digitar um texto
+                return input('\nDigite o texto:\n')  # Recebe e retorna o texto digitado
 
-                if posicao != -1:
-                    posicao = (posicao + chave) % len(base)  # Avança o caractere de acordo com a chave e aplica o resto da divisão para não estourar o limite
-                    cripto = cripto + base[posicao]  # Substitui pelo caractere criptografado e adiciona à string final
-                else:
-                    cripto = cripto + palavra  # Mantém o caractere original sem alterações se ele não fizer parte da base
+            elif escolha == 2:  # Verifica se o usuário escolheu abrir um arquivo
+                caminho = input('\nDigite o caminho do arquivo .txt:\n').strip().strip('"')  # Recebe o caminho e remove espaços e aspas externas
 
-        elif forma == 2:
-            texto = input('\nDigite o texto que deseja descriptografar:\n')  # Solicita a string codificada que será decifrada
-            texto = texto.lower()  # Transforma todo o texto em caracteres minúsculos
+                if not caminho.lower().endswith('.txt'):  # Verifica se o caminho termina em .txt
+                    msg_erro = '\nArquivo inválido! Escolha um arquivo .txt.\n'  # Define a mensagem de erro
+                    continue  # Retorna ao menu sem exigir que o usuário aperte Enter
 
-            for palavra in texto:
-                posicao = base.find(palavra)  # Encontra em qual posição o caractere se localiza dentro da base estável
-                
-                if posicao != -1:
-                    posicao = (posicao - chave) % len(base)  # Recua as posições usando a subtração da chave e ajusta o limite com a rotação matemática
-                    cripto = cripto + base[posicao]  # Adiciona o caractere original recuperado ao acumulador de texto
-                else:
-                    cripto = cripto + palavra  # Conserva símbolos ou caracteres que não foram mapeados na lista base original
+                with open(caminho, 'r', encoding='utf-8-sig') as arquivo:  # Abre o arquivo para leitura
+                    return arquivo.read()  # Lê e retorna todo o conteúdo do arquivo
 
-        msg_erro_minimenu = ""  # Cria uma variável vazia destinada exclusivamente aos erros do menu final de navegação
+            else:  # Executa se o usuário escolher uma opção diferente de 1 ou 2
+                msg_erro = '\nOpção inválida! Escolha apenas 1 ou 2.\n'  # Define a mensagem de erro
 
-        while True:  # Abre o sub-loop encarregado de controlar as ações pós-criptografia sem perder o resultado da tela
-            limpar_tela()  # Limpa o terminal a cada atualização das opções de destino do usuário
-            print('╰┈➤ O texto final fica:', cripto)  # Exibe o resultado do processamento fixado na parte superior da tela
+        except ValueError:  # Trata entradas que não podem ser convertidas em números inteiros
+            msg_erro = '\nEntrada inválida! Digite apenas números.\n'  # Define a mensagem de erro
 
-            print()  # Insere uma linha em branco para organização visual
-            print('─' * 40)  # Desenha a linha divisória superior do novo submenu
-            print('・┆✦ O que deseja fazer agora? ✦ ┆・'.center(38))  # Exibe a pergunta de destino de forma centralizada
-            print('─' * 40)  # Desenha a linha divisória inferior da pergunta do cabeçalho
-            print()  # Insere uma linha em branco
-            print('1 - Voltar ao menu principal'.center(38))  # Apresenta a opção de retorno ao programa base
-            print('2 - Voltar ao inicio'.center(38))  # Apresenta a opção de reiniciar este mesmo fluxo
-            print()  # Outra quebra de linha em branco
-            print('─' * 40)  # Conclui o design com o traço de fechamento da caixa de opções
+        except FileNotFoundError:  # Trata situações em que o arquivo não foi encontrado
+            msg_erro = '\nArquivo não encontrado. Verifique o caminho.\n'  # Define a mensagem de erro
 
-            if msg_erro_minimenu:
-                print(msg_erro_minimenu)  # Exibe a mensagem de erro específica deste menu se o usuário errar a escolha
-                msg_erro_minimenu = ""  # Zera a variável de erro para evitar repetição contínua no terminal
+        except UnicodeDecodeError:  # Trata problemas de leitura relacionados à codificação do arquivo
+            msg_erro = '\nNão foi possível ler o arquivo usando a codificação esperada.\n'  # Define a mensagem de erro
 
-            try:
-                minimenu = int(input('Opção: '))  # Aguarda a resposta numérica do usuário para decidir o destino do fluxo
-                if minimenu == 1 or minimenu == 2:
-                    break  # Encerra este sub-loop específico se a opção informada for aceita
-                else:
-                    msg_erro_minimenu = '\nOpção inválida! Escolha apenas 1 ou 2.\n'  # Grava o erro caso o valor numérico seja incorreto
-            except ValueError:
-                msg_erro_minimenu = '\nEntrada inválida! Digite apenas números.\n'  # Grava o erro se a digitação contiver letras ou caracteres inválidos
+        except OSError as erro:  # Trata outros problemas ao acessar o arquivo
+            msg_erro = f'\nNão foi possível abrir o arquivo: {erro}\n'  # Mostra o motivo do erro
 
-        if minimenu == 1:
-            return  # Direciona o fluxo de volta chamando o menu principal importado do main.py
-            
-        elif minimenu == 2:
-            print('\nReiniciando...')  # Exibe um feedback rápido na tela antes de reiniciar o loop principal do arquivo
 
+def salvar_resultado(texto, forma):  # Cria uma função para salvar automaticamente o resultado
+    nome = 'mensagem_criptografada.txt' if forma == 1 else 'mensagem_descriptografada.txt'  # Define o nome de acordo com a operação
+    nome_base, extensao = os.path.splitext(nome)  # Separa o nome do arquivo de sua extensão
+    contador = 2  # Define o primeiro número para criar nomes alternativos
+
+    try:  # Inicia o tratamento de erros durante o salvamento
+        os.makedirs(pasta_destino, exist_ok=True)  # Cria a pasta de destino caso ela ainda não exista
+
+        caminho_completo = os.path.join(pasta_destino, nome)  # Monta o caminho completo do arquivo
+
+        while os.path.exists(caminho_completo):  # Verifica se já existe um arquivo com esse nome
+            nome = f'{nome_base}_{contador}{extensao}'  # Cria um nome alternativo para não sobrescrever o arquivo
+            caminho_completo = os.path.join(pasta_destino, nome)  # Atualiza o caminho completo
+            contador += 1  # Incrementa o contador para a próxima tentativa
+
+        with open(caminho_completo, 'w', encoding='utf-8') as arquivo:  # Cria o arquivo no destino definido
+            arquivo.write(texto)  # Escreve o resultado no arquivo
+
+        print(f'\nArquivo salvo em: {caminho_completo}')  # Informa onde o arquivo foi salvo
+
+    except OSError as erro:  # Trata problemas como pendrive desconectado ou falta de permissão
+        print(f'\nNão foi possível salvar o arquivo: {erro}')  # Exibe o motivo do erro
+
+
+def criptografia():  # Cria a função principal de criptografia e descriptografia
+    msg_erro = ""  # Inicializa a mensagem de erro do menu
+
+    while True:  # Mantém o menu funcionando até o usuário decidir voltar
+        limpar_tela()  # Limpa o terminal
+        print('─' * 40)  # Exibe a linha superior do menu
+        print('・┆✦ O QUE VOCE DESEJA FAZER? ✦ ┆・'.center(38))  # Exibe o título centralizado
+        print('─' * 40)  # Exibe uma linha divisória
+        print()  # Pula uma linha
+        print('1 - Criptografar'.center(33))  # Exibe a opção de criptografar
+        print('2 - Descriptografar'.center(35))  # Exibe a opção de descriptografar
+        print()  # Pula uma linha
+        print('─' * 40)  # Exibe a linha inferior do menu
+
+        if msg_erro:  # Verifica se existe uma mensagem de erro
+            print(msg_erro)  # Exibe a mensagem de erro
+            msg_erro = ""  # Limpa a mensagem para a próxima repetição
+
+        try:  # Inicia o tratamento de entradas inválidas
+            forma = int(input('Opção: '))  # Recebe a opção escolhida pelo usuário
+
+            if forma != 1 and forma != 2:  # Verifica se a opção é diferente de 1 e 2
+                msg_erro = '\nOpção inválida! Escolha apenas 1 ou 2.\n'  # Define a mensagem de erro
+                continue  # Retorna ao início do menu
+
+        except ValueError:  # Trata entradas que não são números inteiros
+            msg_erro = '\nEntrada inválida! Digite apenas números.\n'  # Define a mensagem de erro
+            continue  # Retorna ao início do menu
+
+        texto = obter_texto()  # Obtém o texto digitado ou o conteúdo de um arquivo
+        resultado = ""  # Inicializa a variável que armazenará o resultado
+
+        for caractere in texto:  # Percorre cada caractere do texto original
+            maiuscula = caractere.isupper()  # Verifica se o caractere original é uma letra maiúscula
+            caractere_base = caractere.lower()  # Converte temporariamente o caractere para minúscula
+            posicao = base.find(caractere_base)  # Procura a posição do caractere na base
+
+            if posicao != -1:  # Verifica se o caractere foi encontrado na base
+                if forma == 1:  # Verifica se a operação escolhida foi criptografar
+                    posicao = (posicao + chave) % len(base)  # Avança a posição conforme a chave
+                else:  # Executa quando a operação escolhida é descriptografar
+                    posicao = (posicao - chave) % len(base)  # Retrocede a posição conforme a chave
+
+                novo_caractere = base[posicao]  # Obtém o caractere correspondente à nova posição
+
+                if maiuscula and novo_caractere.isalpha():  # Verifica se a letra original era maiúscula
+                    novo_caractere = novo_caractere.upper()  # Mantém a letra transformada em maiúscula
+
+                resultado += novo_caractere  # Adiciona o caractere transformado ao resultado
+
+            else:  # Executa quando o caractere não está na base
+                resultado += caractere  # Preserva espaços, quebras de linha e caracteres não reconhecidos
+
+        limpar_tela()  # Limpa o terminal antes de apresentar o resultado
+        print('╰┈➤ O texto final fica:',resultado)  # Mostra o texto criptografado ou descriptografado
+
+        salvar_resultado(resultado, forma)  # Salva automaticamente o resultado no destino definido
+
+        msg_erro_minimenu = ""  # Inicializa a mensagem de erro do menu final
+
+        while True:  # Mantém o menu final funcionando até receber uma opção válida
+            print()  # Pula uma linha
+            print('─' * 40)  # Exibe a linha superior
+            print('・┆✦ O que deseja fazer agora? ✦ ┆・'.center(38))  # Exibe o título centralizado
+            print('─' * 40)  # Exibe uma linha divisória
+            print()  # Pula uma linha
+            print('1 - Voltar ao menu principal'.center(38))  # Exibe a opção de voltar ao menu principal
+            print('2 - Voltar ao inicio'.center(38))  # Exibe a opção de realizar outra operação
+            print()  # Pula uma linha
+            print('─' * 40)  # Exibe a linha inferior
+
+            if msg_erro_minimenu:  # Verifica se existe uma mensagem de erro
+                print(msg_erro_minimenu)  # Exibe a mensagem de erro
+                msg_erro_minimenu = ""  # Limpa a mensagem
+
+            try:  # Inicia o tratamento de entradas inválidas
+                minimenu = int(input('Opção: '))  # Recebe a opção escolhida
+
+                if minimenu == 1 or minimenu == 2:  # Verifica se a opção é válida
+                    break  # Encerra o menu final
+                else:  # Executa se a opção não for 1 nem 2
+                    msg_erro_minimenu = '\nOpção inválida! Escolha apenas 1 ou 2.\n'  # Define a mensagem de erro
+
+            except ValueError:  # Trata entradas que não são números inteiros
+                msg_erro_minimenu = '\nEntrada inválida! Digite apenas números.\n'  # Define a mensagem de erro
+
+        if minimenu == 1:  # Verifica se o usuário escolheu voltar ao menu principal
+            return  # Encerra a função de criptografia
+
+        elif minimenu == 2:  # Verifica se o usuário escolheu realizar outra operação
+            msg_erro = ""  # Limpa mensagens de erro anteriores
