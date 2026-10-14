@@ -1,26 +1,37 @@
-import os  # Permite trabalhar com pastas, caminhos e arquivos
+import os  # Permite trabalhar com arquivos e caminhos
 import platform  # Identifica o sistema operacional utilizado
 import subprocess  # Permite executar comandos do sistema
+from pathlib import Path  # Facilita o trabalho com caminhos de arquivos
+
 
 def limpar_tela():  # Cria uma função para limpar o terminal
-    comando = "cls" if platform.system() == "Windows" else "clear"  # Escolhe o comando conforme o sistema operacional
-    subprocess.run(comando, shell=True)  # Executa o comando para limpar a tela
+    # Escolhe o comando adequado para o sistema operacional
+    comando = "cls" if platform.system() == "Windows" else "clear"
 
-base = 'abcdefghijklmnopqrstuvwxyzàáâãéêíóôõúüç.,;:!?(){}"-–—_@#%&*+=/$§1234567890'  # Define os caracteres utilizados na cifra, sem duplicar as letras maiúsculas
-chave = 3  # Define o número de posições que cada caractere será deslocado
-pasta_destino = r"E:\Mensagens_Criptografadas"  # Define a pasta em que os arquivos serão salvos no pendrive
+    # Executa o comando para limpar a tela
+    subprocess.run(comando, shell=True)
 
-def obter_texto():  # Cria uma função para digitar um texto ou abrir um arquivo
+
+# Define os caracteres que podem ser utilizados pela cifra
+# A base contém letras minúsculas, acentuadas, símbolos e números
+base = 'abcdefghijklmnopqrstuvwxyzàáâãéêíóôõúüç.,;:!?(){}"-–—_@#%&*+=/$§1234567890'
+
+# Define a quantidade de posições que cada caractere será deslocado
+chave = 3
+
+
+def obter_texto():  # Permite digitar um texto ou selecionar um arquivo .txt
     msg_erro = ""  # Inicializa a mensagem de erro
 
     while True:  # Mantém o menu funcionando até receber uma entrada válida
         limpar_tela()  # Limpa o terminal
+
         print('─' * 40)  # Exibe a linha superior do menu
-        print('・┆✦ COMO DESEJA INSERIR O TEXTO? ✦ ┆・'.center(40))  # Exibe o título centralizado
+        print('・┆✦ COMO DESEJA INSERIR O TEXTO? ✦ ┆・'.center(40))
         print('─' * 40)  # Exibe uma linha divisória
         print()  # Pula uma linha
-        print('1 - Digitar texto'.center(38))  # Exibe a opção para digitar um texto
-        print('2 - Abrir arquivo .txt'.center(38))  # Exibe a opção para abrir um arquivo
+        print('1 - Digitar texto'.center(38))  # Opção para digitar texto
+        print('2 - Abrir arquivo .txt'.center(38))  # Opção para selecionar arquivo
         print()  # Pula uma linha
         print('─' * 40)  # Exibe a linha inferior do menu
 
@@ -28,150 +39,274 @@ def obter_texto():  # Cria uma função para digitar um texto ou abrir um arquiv
             print(msg_erro)  # Exibe a mensagem de erro
             msg_erro = ""  # Limpa a mensagem para não repeti-la
 
-        try:  # Inicia o tratamento de possíveis entradas inválidas
-            escolha = int(input('Opção: '))  # Recebe a opção digitada pelo usuário
+        try:  # Inicia o tratamento de entradas inválidas
+            escolha = int(input('Opção: '))  # Recebe a opção do usuário
 
-            if escolha == 1:  # Verifica se o usuário escolheu digitar um texto
-                return input('\nDigite o texto:\n')  # Recebe e retorna o texto digitado
+            if escolha == 1:  # Verifica se o usuário escolheu digitar texto
+                return input('\nDigite o texto:\n')  # Retorna o texto digitado
 
             elif escolha == 2:  # Verifica se o usuário escolheu abrir um arquivo
-                caminho = input('\nDigite o caminho do arquivo .txt:\n').strip().strip('"')  # Recebe o caminho e remove espaços e aspas externas
 
-                if not caminho.lower().endswith('.txt'):  # Verifica se o caminho termina em .txt
-                    msg_erro = '\nArquivo inválido! Escolha um arquivo .txt.\n'  # Define a mensagem de erro
-                    continue  # Retorna ao menu sem exigir que o usuário aperte Enter
+                try:  # Tenta abrir a janela de seleção de arquivos
+                    import tkinter as tk  # Importa recursos da interface gráfica
+                    from tkinter import filedialog  # Importa as janelas de seleção
 
-                with open(caminho, 'r', encoding='utf-8-sig') as arquivo:  # Abre o arquivo para leitura
-                    return arquivo.read()  # Lê e retorna todo o conteúdo do arquivo
+                    janela = tk.Tk()  # Cria a janela principal do Tkinter
+                    janela.withdraw()  # Esconde a janela principal
 
-            else:  # Executa se o usuário escolher uma opção diferente de 1 ou 2
-                msg_erro = '\nOpção inválida! Escolha apenas 1 ou 2.\n'  # Define a mensagem de erro
+                    try:
+                        # Mantém a janela de seleção à frente das outras
+                        janela.attributes('-topmost', True)
 
-        except ValueError:  # Trata entradas que não podem ser convertidas em números inteiros
-            msg_erro = '\nEntrada inválida! Digite apenas números.\n'  # Define a mensagem de erro
+                        # Abre uma janela para escolher o arquivo de entrada
+                        caminho = filedialog.askopenfilename(
+                            parent=janela,
+                            title='Selecione o arquivo de texto',
+                            filetypes=[
+                                ('Arquivos de texto', '*.txt'),
+                                ('Todos os arquivos', '*.*')
+                            ]
+                        )
 
-        except FileNotFoundError:  # Trata situações em que o arquivo não foi encontrado
-            msg_erro = '\nArquivo não encontrado. Verifique o caminho.\n'  # Define a mensagem de erro
+                    finally:
+                        janela.destroy()  # Fecha a janela do Tkinter
 
-        except UnicodeDecodeError:  # Trata problemas de leitura relacionados à codificação do arquivo
-            msg_erro = '\nNão foi possível ler o arquivo usando a codificação esperada.\n'  # Define a mensagem de erro
+                except Exception:
+                    # Usa o terminal se a janela gráfica não estiver disponível
+                    print('\nNão foi possível abrir a janela de seleção.')
+                    caminho = input(
+                        'Digite o caminho do arquivo .txt:\n'
+                    ).strip().strip('"')
 
-        except OSError as erro:  # Trata outros problemas ao acessar o arquivo
-            msg_erro = f'\nNão foi possível abrir o arquivo: {erro}\n'  # Mostra o motivo do erro
+                # Verifica se o usuário cancelou a seleção
+                if not caminho:
+                    msg_erro = '\nNenhum arquivo foi selecionado.\n'
+                    continue  # Volta ao menu
 
+                # Converte o caminho informado em um objeto Path
+                arquivo_txt = Path(caminho).expanduser()
 
-def salvar_resultado(texto, forma):  # Cria uma função para salvar automaticamente o resultado
-    nome = 'mensagem_criptografada.txt' if forma == 1 else 'mensagem_descriptografada.txt'  # Define o nome de acordo com a operação
-    nome_base, extensao = os.path.splitext(nome)  # Separa o nome do arquivo de sua extensão
-    contador = 2  # Define o primeiro número para criar nomes alternativos
+                # Verifica se o arquivo possui a extensão .txt
+                if arquivo_txt.suffix.lower() != '.txt':
+                    msg_erro = '\nArquivo inválido! Escolha um arquivo .txt.\n'
+                    continue  # Volta ao menu
 
-    try:  # Inicia o tratamento de erros durante o salvamento
-        os.makedirs(pasta_destino, exist_ok=True)  # Cria a pasta de destino caso ela ainda não exista
+                # Abre o arquivo usando UTF-8 e aceita BOM no início do texto
+                with open(arquivo_txt, 'r', encoding='utf-8-sig') as arquivo:
+                    return arquivo.read()  # Lê e retorna todo o conteúdo
 
-        caminho_completo = os.path.join(pasta_destino, nome)  # Monta o caminho completo do arquivo
-
-        while os.path.exists(caminho_completo):  # Verifica se já existe um arquivo com esse nome
-            nome = f'{nome_base}_{contador}{extensao}'  # Cria um nome alternativo para não sobrescrever o arquivo
-            caminho_completo = os.path.join(pasta_destino, nome)  # Atualiza o caminho completo
-            contador += 1  # Incrementa o contador para a próxima tentativa
-
-        with open(caminho_completo, 'w', encoding='utf-8') as arquivo:  # Cria o arquivo no destino definido
-            arquivo.write(texto)  # Escreve o resultado no arquivo
-
-        print(f'\nArquivo salvo em: {caminho_completo}')  # Informa onde o arquivo foi salvo
-
-    except OSError as erro:  # Trata problemas como pendrive desconectado ou falta de permissão
-        print(f'\nNão foi possível salvar o arquivo: {erro}')  # Exibe o motivo do erro
-
-
-def criptografia():  # Cria a função principal de criptografia e descriptografia
-    msg_erro = ""  # Inicializa a mensagem de erro do menu
-
-    while True:  # Mantém o menu funcionando até o usuário decidir voltar
-        limpar_tela()  # Limpa o terminal
-        print('─' * 40)  # Exibe a linha superior do menu
-        print('・┆✦ O QUE VOCE DESEJA FAZER? ✦ ┆・'.center(38))  # Exibe o título centralizado
-        print('─' * 40)  # Exibe uma linha divisória
-        print()  # Pula uma linha
-        print('1 - Criptografar'.center(33))  # Exibe a opção de criptografar
-        print('2 - Descriptografar'.center(35))  # Exibe a opção de descriptografar
-        print()  # Pula uma linha
-        print('─' * 40)  # Exibe a linha inferior do menu
-
-        if msg_erro:  # Verifica se existe uma mensagem de erro
-            print(msg_erro)  # Exibe a mensagem de erro
-            msg_erro = ""  # Limpa a mensagem para a próxima repetição
-
-        try:  # Inicia o tratamento de entradas inválidas
-            forma = int(input('Opção: '))  # Recebe a opção escolhida pelo usuário
-
-            if forma != 1 and forma != 2:  # Verifica se a opção é diferente de 1 e 2
-                msg_erro = '\nOpção inválida! Escolha apenas 1 ou 2.\n'  # Define a mensagem de erro
-                continue  # Retorna ao início do menu
+            else:  # Executa se a opção for diferente de 1 ou 2
+                msg_erro = '\nOpção inválida! Escolha apenas 1 ou 2.\n'
 
         except ValueError:  # Trata entradas que não são números inteiros
-            msg_erro = '\nEntrada inválida! Digite apenas números.\n'  # Define a mensagem de erro
-            continue  # Retorna ao início do menu
+            msg_erro = '\nEntrada inválida! Digite apenas números.\n'
 
-        texto = obter_texto()  # Obtém o texto digitado ou o conteúdo de um arquivo
+        except FileNotFoundError:  # Trata arquivos que não foram encontrados
+            msg_erro = '\nArquivo não encontrado. Verifique o arquivo escolhido.\n'
+
+        except UnicodeDecodeError:  # Trata problemas de codificação do arquivo
+            msg_erro = '\nNão foi possível ler o arquivo usando UTF-8.\n'
+
+        except OSError as erro:  # Trata outros problemas de acesso ao arquivo
+            msg_erro = f'\nNão foi possível abrir o arquivo: {erro}\n'
+
+
+def salvar_resultado(texto, forma):  # Salva o resultado em uma pasta escolhida
+
+    # Define o nome do arquivo de acordo com a operação realizada
+    if forma == 1:
+        nome = 'mensagem_criptografada.txt'
+    else:
+        nome = 'mensagem_descriptografada.txt'
+
+    try:  # Inicia o tratamento de erros durante o salvamento
+
+        try:  # Tenta abrir a janela para selecionar a pasta
+            import tkinter as tk  # Importa recursos da interface gráfica
+            from tkinter import filedialog  # Importa a janela de seleção de pastas
+
+            janela = tk.Tk()  # Cria a janela principal
+            janela.withdraw()  # Esconde a janela principal
+
+            try:
+                # Mantém a janela de seleção à frente das outras
+                janela.attributes('-topmost', True)
+
+                # Abre a janela para o usuário escolher a pasta de destino
+                pasta_escolhida = filedialog.askdirectory(
+                    parent=janela,
+                    title='Escolha onde salvar o resultado'
+                )
+
+            finally:
+                janela.destroy()  # Fecha a janela do Tkinter
+
+        except Exception:
+            # Usa o terminal caso a janela gráfica não funcione
+            pasta_escolhida = ""
+
+        # Verifica se a janela foi cancelada ou não pôde ser aberta
+        if not pasta_escolhida:
+            print('\nInforme o caminho da pasta onde deseja salvar.')
+            print('Exemplo no Windows: E:\\Mensagens_Criptografadas')
+            print('Pressione Enter para cancelar o salvamento.')
+
+            # Recebe o caminho digitado e remove espaços e aspas externas
+            pasta_escolhida = input('Pasta: ').strip().strip('"')
+
+            # Cancela o salvamento se o usuário não informar um caminho
+            if not pasta_escolhida:
+                print('\nSalvamento cancelado.')
+                return
+
+        # Converte o caminho escolhido em um objeto Path
+        pasta_destino = Path(pasta_escolhida).expanduser()
+
+        # Verifica se a pasta existe e pode ser acessada
+        if not pasta_destino.is_dir():
+            print('\nA pasta não existe ou não está acessível.')
+            return
+
+        # Combina a pasta escolhida com o nome do arquivo
+        caminho_arquivo = pasta_destino / nome
+
+        # Define o número inicial para criar nomes alternativos
+        contador = 2
+
+        # Verifica se já existe um arquivo com esse nome
+        while caminho_arquivo.exists():
+
+            # Cria um nome alternativo sem alterar a extensão
+            nome_alternativo = (
+                f'{Path(nome).stem}_{contador}{Path(nome).suffix}'
+            )
+
+            # Atualiza o caminho para o novo nome
+            caminho_arquivo = pasta_destino / nome_alternativo
+
+            # Incrementa o contador para a próxima tentativa
+            contador += 1
+
+        # Salva o texto no arquivo utilizando a codificação UTF-8
+        caminho_arquivo.write_text(texto, encoding='utf-8')
+
+        # Informa ao usuário onde o arquivo foi salvo
+        print(f'\nArquivo salvo em: {caminho_arquivo}')
+
+    except OSError as erro:  # Trata problemas de acesso ou gravação
+        print(f'\nNão foi possível salvar o arquivo: {erro}')
+
+
+def criptografia():  # Controla a criptografia e a descriptografia
+    msg_erro = ""  # Inicializa a mensagem de erro do menu principal
+
+    while True:  # Mantém o menu principal funcionando
+        limpar_tela()  # Limpa o terminal
+
+        print('─' * 40)  # Exibe a linha superior
+        print('・┆✦ O QUE VOCE DESEJA FAZER? ✦ ┆・'.center(38))
+        print('─' * 40)  # Exibe uma linha divisória
+        print()  # Pula uma linha
+        print('1 - Criptografar'.center(33))  # Opção de criptografia
+        print('2 - Descriptografar'.center(35))  # Opção de descriptografia
+        print()  # Pula uma linha
+        print('─' * 40)  # Exibe a linha inferior
+
+        if msg_erro:  # Verifica se existe uma mensagem de erro
+            print(msg_erro)  # Exibe a mensagem
+            msg_erro = ""  # Limpa a mensagem
+
+        try:  # Trata entradas inválidas
+            forma = int(input('Opção: '))  # Recebe a operação escolhida
+
+            # Aceita somente as opções 1 e 2
+            if forma != 1 and forma != 2:
+                msg_erro = '\nOpção inválida! Escolha apenas 1 ou 2.\n'
+                continue  # Retorna ao menu principal
+
+        except ValueError:  # Trata entradas que não são números inteiros
+            msg_erro = '\nEntrada inválida! Digite apenas números.\n'
+            continue  # Retorna ao menu principal
+
+        texto = obter_texto()  # Obtém o texto digitado ou lido do arquivo
         resultado = ""  # Inicializa a variável que armazenará o resultado
 
-        for caractere in texto:  # Percorre cada caractere do texto original
-            maiuscula = caractere.isupper()  # Verifica se o caractere original é uma letra maiúscula
-            caractere_base = caractere.lower()  # Converte temporariamente o caractere para minúscula
-            posicao = base.find(caractere_base)  # Procura a posição do caractere na base
+        # Percorre cada caractere do texto original
+        for caractere in texto:
+            maiuscula = caractere.isupper()  # Verifica se era maiúsculo
+            caractere_base = caractere.lower()  # Converte temporariamente para minúsculo
+            posicao = base.find(caractere_base)  # Procura o caractere na base
 
-            if posicao != -1:  # Verifica se o caractere foi encontrado na base
-                if forma == 1:  # Verifica se a operação escolhida foi criptografar
-                    posicao = (posicao + chave) % len(base)  # Avança a posição conforme a chave
-                else:  # Executa quando a operação escolhida é descriptografar
-                    posicao = (posicao - chave) % len(base)  # Retrocede a posição conforme a chave
+            # Verifica se o caractere foi encontrado na base
+            if posicao != -1:
 
-                novo_caractere = base[posicao]  # Obtém o caractere correspondente à nova posição
+                if forma == 1:  # Executa se a operação for criptografar
+                    # Avança a posição conforme o valor da chave
+                    posicao = (posicao + chave) % len(base)
 
-                if maiuscula and novo_caractere.isalpha():  # Verifica se a letra original era maiúscula
-                    novo_caractere = novo_caractere.upper()  # Mantém a letra transformada em maiúscula
+                else:  # Executa se a operação for descriptografar
+                    # Retrocede a posição conforme o valor da chave
+                    posicao = (posicao - chave) % len(base)
 
-                resultado += novo_caractere  # Adiciona o caractere transformado ao resultado
+                # Obtém o caractere correspondente à nova posição
+                novo_caractere = base[posicao]
 
-            else:  # Executa quando o caractere não está na base
-                resultado += caractere  # Preserva espaços, quebras de linha e caracteres não reconhecidos
+                # Mantém a letra maiúscula quando o original era maiúsculo
+                if maiuscula and novo_caractere.isalpha():
+                    novo_caractere = novo_caractere.upper()
 
-        limpar_tela()  # Limpa o terminal antes de apresentar o resultado
-        print('╰┈➤ O texto final fica:',resultado)  # Mostra o texto criptografado ou descriptografado
+                # Adiciona o caractere transformado ao resultado
+                resultado += novo_caractere
 
-        salvar_resultado(resultado, forma)  # Salva automaticamente o resultado no destino definido
+            else:
+                # Preserva espaços, quebras de linha e outros caracteres
+                resultado += caractere
 
-        msg_erro_minimenu = ""  # Inicializa a mensagem de erro do menu final
+        limpar_tela()  # Limpa a tela antes de exibir o resultado
 
-        while True:  # Mantém o menu final funcionando até receber uma opção válida
+        # Mostra o texto final no terminal
+        print('╰┈➤ O texto final fica:', resultado)
+
+        # Abre a seleção de pasta e salva o resultado
+        salvar_resultado(resultado, forma)
+
+        msg_erro_minimenu = ""  # Inicializa o erro do menu final
+
+        while True:  # Repete o menu até receber uma opção válida
             print()  # Pula uma linha
             print('─' * 40)  # Exibe a linha superior
-            print('・┆✦ O que deseja fazer agora? ✦ ┆・'.center(38))  # Exibe o título centralizado
+            print('・┆✦ O que deseja fazer agora? ✦ ┆・'.center(38))
             print('─' * 40)  # Exibe uma linha divisória
             print()  # Pula uma linha
-            print('1 - Voltar ao menu principal'.center(38))  # Exibe a opção de voltar ao menu principal
-            print('2 - Voltar ao inicio'.center(38))  # Exibe a opção de realizar outra operação
+            print('1 - Voltar ao menu principal'.center(38))
+            print('2 - Voltar ao inicio'.center(38))
             print()  # Pula uma linha
             print('─' * 40)  # Exibe a linha inferior
 
             if msg_erro_minimenu:  # Verifica se existe uma mensagem de erro
-                print(msg_erro_minimenu)  # Exibe a mensagem de erro
+                print(msg_erro_minimenu)  # Exibe a mensagem
                 msg_erro_minimenu = ""  # Limpa a mensagem
 
-            try:  # Inicia o tratamento de entradas inválidas
+            try:  # Trata entradas inválidas
                 minimenu = int(input('Opção: '))  # Recebe a opção escolhida
 
-                if minimenu == 1 or minimenu == 2:  # Verifica se a opção é válida
-                    break  # Encerra o menu final
-                else:  # Executa se a opção não for 1 nem 2
-                    msg_erro_minimenu = '\nOpção inválida! Escolha apenas 1 ou 2.\n'  # Define a mensagem de erro
+                # Verifica se a opção é válida
+                if minimenu == 1 or minimenu == 2:
+                    break  # Sai do menu final
+
+                else:
+                    msg_erro_minimenu = (
+                        '\nOpção inválida! Escolha apenas 1 ou 2.\n'
+                    )
 
             except ValueError:  # Trata entradas que não são números inteiros
-                msg_erro_minimenu = '\nEntrada inválida! Digite apenas números.\n'  # Define a mensagem de erro
+                msg_erro_minimenu = (
+                    '\nEntrada inválida! Digite apenas números.\n'
+                )
 
-        if minimenu == 1:  # Verifica se o usuário escolheu voltar ao menu principal
-            return  # Encerra a função de criptografia
+        if minimenu == 1:  # Verifica se o usuário escolheu voltar ao menu
+            return  # Encerra a função criptografia
 
-        elif minimenu == 2:  # Verifica se o usuário escolheu realizar outra operação
+        elif minimenu == 2:  # Verifica se deseja realizar outra operação
             msg_erro = ""  # Limpa mensagens de erro anteriores
+            # O laço principal apresenta novamente o menu de operações
