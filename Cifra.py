@@ -1,4 +1,3 @@
-import os  # Permite trabalhar com arquivos e caminhos
 import platform  # Identifica o sistema operacional utilizado
 import subprocess  # Permite executar comandos do sistema
 from pathlib import Path  # Facilita o trabalho com caminhos de arquivos
@@ -80,7 +79,7 @@ def obter_texto():  # Permite digitar um texto ou selecionar um arquivo .txt
 
                 # Verifica se o usuário cancelou a seleção
                 if not caminho:
-                    msg_erro = '\nNenhum arquivo foi selecionado.\n'
+                    msg_erro = '\nOperação cancelada. Escolha uma opção novamente.\n'
                     continue  # Volta ao menu
 
                 # Converte o caminho informado em um objeto Path
@@ -155,13 +154,30 @@ def salvar_resultado(texto, forma):
 
                 if not pasta_escolhida:
                     print('\nSalvamento cancelado.')
-                    return
+                    return None
 
+            # Valida o caminho e solicita novamente se estiver incorreto.
             pasta_destino = Path(pasta_escolhida).expanduser()
 
             if not pasta_destino.is_dir():
-                print('\nA pasta não existe ou não está acessível.')
-                return
+                print('\nO caminho informado não corresponde a uma pasta válida.')
+                print('Digite um caminho de pasta válido (Enter para cancelar):')
+
+                while True:
+                    pasta_escolhida = input().strip().strip('"')
+
+                    if not pasta_escolhida:
+                        print('\nSalvamento cancelado.')
+                        return None
+
+                    pasta_destino = Path(pasta_escolhida).expanduser()
+
+                    if pasta_destino.is_dir():
+                        break
+
+                    # Limpa a tela para ocultar as tentativas anteriores.
+                    limpar_tela()
+                    print('Digite um caminho de pasta válido (Enter para cancelar):')
 
         # Evita substituir arquivos que já existem.
         caminho_arquivo = pasta_destino / nome
@@ -177,10 +193,12 @@ def salvar_resultado(texto, forma):
         # Salva o resultado em formato de texto.
         caminho_arquivo.write_text(texto, encoding='utf-8')
 
-        print(f'\nArquivo salvo em: {caminho_arquivo}')
+        # Retorna o caminho para exibi-lo depois do resultado na tela.
+        return caminho_arquivo
 
     except OSError as erro:
         print(f'\nNão foi possível salvar o arquivo: {erro}')
+        return None
 
 def criptografia():  # Controla a criptografia e a descriptografia
     msg_erro = ""  # Inicializa a mensagem de erro do menu principal
@@ -249,15 +267,21 @@ def criptografia():  # Controla a criptografia e a descriptografia
 
         limpar_tela()  # Limpa a tela antes de exibir o resultado
 
-        # Mostra o texto final no terminal
-        print('╰┈➤ O texto final fica:', resultado)
-
         # Abre a seleção de pasta e salva o resultado
-        salvar_resultado(resultado, forma)
+        caminho_salvo = salvar_resultado(resultado, forma)
 
         msg_erro_minimenu = ""  # Inicializa o erro do menu final
 
         while True:  # Repete o menu até receber uma opção válida
+            limpar_tela()
+            
+            # Mostra o texto final no terminal
+            print('╰┈➤ O texto final fica:', resultado)
+
+            # Mostra o local do arquivo depois de exibir o resultado.
+            if caminho_salvo:
+                print(f'\nArquivo salvo em: {caminho_salvo}')
+            
             print()  # Pula uma linha
             print('─' * 40)  # Exibe a linha superior
             print('・┆✦ O que deseja fazer agora? ✦ ┆・'.center(38))
