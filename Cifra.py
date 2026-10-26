@@ -143,7 +143,7 @@ def obter_texto():  # Permite digitar um texto ou selecionar um arquivo .txt
                 # Testa uma condição e executa o bloco abaixo somente se ela for verdadeira.
                 if arquivo_txt.suffix.lower() != '.txt':
                     # Guarda a mensagem que será mostrada se ocorrer uma entrada ou operação inválida.
-                    msg_erro = '\nArquivo inválido! Escolha um arquivo .txt.\n'
+                    msg_erro = '\nOperação cancelada. Escolha uma opção novamente.\n'
                     # Executa a instrução indicada nesta linha.
                     continue  # Volta ao menu
 
